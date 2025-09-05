@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { fakeLogin } from "@/lib/fakeAuth";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Cookies from "js-cookie";
 
 const loginSchema = z.object({
   email: z.email("Invalid email"),
@@ -28,9 +29,10 @@ export default function Login() {
     try {
       const { user } = fakeLogin(data.email, data.password);
       console.log("User found:", user);
+      Cookies.set("token", "dummy-token-" + user.role, { path: "/" });
       toast.success(`Welcome, ${user.name}`);
       console.log("Redirecting to:", user.role === "admin" ? "/admin/articles" : "/articles");
-      router.replace(user.role === "admin" ? "/admin/articles" : "/articles");
+      router.push(user.role === "admin" ? "/admin/articles" : "/articles");
 
     } catch (err: unknown) {
       console.error("Login error:", err); 

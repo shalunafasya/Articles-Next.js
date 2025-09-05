@@ -1,13 +1,13 @@
 import axios from "axios";
 
-export const api = axios.create({
-  baseURL: "https://test-fe.mysellerpintar.com/api",
-});
+const API_URL = "https://test-fe.mysellerpintar.com/api";
 
-api.interceptors.request.use((config) => {
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+export const getArticles = async () => {
+  try {
+    const res = await axios.get(`${API_URL}/articles`);
+    return res.data;
+  } catch (err) {
+    console.error("Error fetching articles:", err);
+    return { data: [], total: 0 };
   }
-  return config;
-});
+};

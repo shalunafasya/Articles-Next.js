@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "thumbnail": "/images/article1.jpg",
+    "title": "Cybersecurity Essentials Every Developer Should Know",
+    "excerpt": "Protect your apps and users with these fundamental cybersecurity practices for developers.",
+    "category": ["Technology", "Design"],
+    "createdAt": "2025-04-13"
+  },
+  {
+    "id": 2,
+    "thumbnail": "/images/article2.jpg",
+    "title": "The Future of Work: Remote-First Teams and Digital Tools",
+    "excerpt": "How tech companies are optimizing remote collaboration with smarter tools and processes.",
+    "category": ["Technology", "Design"],
+    "createdAt": "2025-04-10"
+  },
+  {
+    "id": 3,
+    "thumbnail": "/images/article3.jpg",
+    "title": "Design Systems: Why Your Team Needs One in 2025",
+    "excerpt": "Learn how design systems save time, ensure consistency, and scale design efforts.",
+    "category": ["Technology", "Design"],
+    "createdAt": "2025-04-09"
+  },
+  {
+    "id": 2,
+    "thumbnail": "/images/article2.jpg",
+    "title": "The Future of Work: Remote-First Teams and Digital Tools",
+    "excerpt": "How tech companies are optimizing remote collaboration with smarter tools and processes.",
+    "category": ["Technology", "Design"],
+    "createdAt": "2025-04-10"
+  },
+  {
+    "id": 3,
+    "thumbnail": "/images/article3.jpg",
+    "title": "Design Systems: Why Your Team Needs One in 2025",
+    "excerpt": "Learn how design systems save time, ensure consistency, and scale design efforts.",
+    "category": ["Technology", "Design"],
+    "createdAt": "2025-04-09"
+  }
+]

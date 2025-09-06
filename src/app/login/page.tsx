@@ -47,7 +47,6 @@ export default function Login() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-100">
       <div className="bg-white rounded-2xl shadow-2xl flex w-2/3 max-w-4xl text-center">
-        {/* Left Section */}
         <div className="w-3/5 p-5">
           <div className="text-left font-bold">
             <span className="text-blue-500">Logo</span>Ipsum
@@ -62,13 +61,11 @@ export default function Login() {
               Log in to your account to read and manage articles.
             </p>
 
-            {/* FORM LOGIN */}
             <form
               key="login-form"
               onSubmit={handleSubmit(onSubmit)}
               className="flex flex-col items-center"
             >
-              {/* Email */}
               <div className="bg-gray-100 w-64 p-2 flex items-center mb-3">
                 <FaEnvelope className="text-gray-400 m-2" />
                 <input
@@ -83,7 +80,6 @@ export default function Login() {
                 <p className="text-red-500 text-xs">{errors.email.message}</p>
               )}
 
-              {/* Password */}
               <div className="bg-gray-100 w-64 p-2 flex items-center mb-3">
                 <MdLock className="text-gray-400 m-2" />
                 <input
@@ -108,7 +104,6 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Right Section */}
         <div className="w-2/5 bg-blue-500 text-white rounded-tr-2xl rounded-br-2xl py-36 px-12">
           <h2 className="text-3xl font-bold mb-2">Hello, User!</h2>
           <div className="border-2 w-10 border-white inline-block mb-2"></div>

@@ -51,7 +51,7 @@ export default function ArticleDetail({ params }: Props) {
             (a: Article) =>
               a.categoryId === article.categoryId && a.id !== article.id
           )
-          .slice(0, 3); // ambil maksimal 3
+          .slice(0, 3);
         setRecommended(sameCategory);
 
         const data = res.data;
@@ -72,7 +72,6 @@ export default function ArticleDetail({ params }: Props) {
 
   return (
     <main>
-      {/* HEADER */}
       <header
         className={`fixed top-0 left-0 right-0 mx-auto h-[96px] flex items-center justify-between px-[60px] transition-colors duration-300 z-50 ${
           isScrolled
@@ -88,14 +87,14 @@ export default function ArticleDetail({ params }: Props) {
             height={64}
           />
         </div>
-        <div className="flex items-center gap-2">
-          {/* Avatar bulat */}
+        <Link href="/user_profile">
+          <div className="flex items-center gap-2">
           <div className="w-10 h-10 rounded-full bg-blue-200 flex items-center justify-center text-blue-500 font-bold">
             {initial}
           </div>
-          {/* Nama user */}
           <span className="text-gray-600">{username}</span>
         </div>
+        </Link>
       </header>
 
       <section className="container mx-auto flex flex-col max-w-[1120px] py-30 justify-center">
@@ -131,33 +130,51 @@ export default function ArticleDetail({ params }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {recommended.map((rec) => (
               <Link key={rec.id} href={`/articles/${rec.id}`}>
-                <div className="rounded-lg bg-white shadow-md hover:shadow-lg transition overflow-hidden">
-                  {rec.imageUrl && (
+                <div className="rounded-lg bg-white hover:shadow-lg transition overflow-hidden">
+                  <div className="h-[240px]">
+                    {rec.imageUrl && (
                     <Image
                       src={rec.imageUrl}
                       alt={rec.title}
                       width={500}
                       height={300}
-                      className="object-cover h-48 w-full"
+                      className="object-cover rounded-b-lg w-[500px] h-[240px]"
                     />
                   )}
-                  <div className="p-4">
-                    <h4 className="text-lg font-semibold">{rec.title}</h4>
-                    <p className="text-sm text-gray-500">
-                      {new Date(rec.createdAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </p>
                   </div>
+                  <div className="py-5">
+                        <p className="text-sm text-gray-500">
+                          {new Date(article.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            }
+                          )}
+                        </p>
+
+                        <h2 className="text-lg font-semibold mt-2">
+                          {article.title}
+                        </h2>
+
+                        <p className="text-sm text-gray-600 mt-2">
+                          {article.content?.slice(0, 100)}...
+                        </p>
+
+                        <div className="flex gap-2 mt-3 flex-wrap">
+                          <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
+                            {article.category.name || "Unknown"}
+                          </span>
+                        </div>
+                      </div>
                 </div>
               </Link>
             ))}
           </div>
         </div>
       </section>
-      <footer className="bg-blue-500 text-white py-4">
+      <footer className="fixed bottom-0 left-0 right-0 bg-blue-500 text-white py-4">
         <div className="container mx-auto text-center">
           <p>&copy; 2025 Blog Genzet. All rights reserved.</p>
         </div>

@@ -13,14 +13,21 @@ export default function Articles() {
   const [limit, setLimit] = useState(0);
   const [username, setUserName] = useState("");
 
-  // Scroll effect for header
+  const [page, setPage] = useState(1);
+  const articlesPerPage = 9;
+
+  const startIndex = (page - 1) * articlesPerPage;
+  const endIndex = startIndex + articlesPerPage;
+  const displayedArticles = articles.slice(startIndex, endIndex);
+
+  const totalPages = Math.ceil(articles.length / articlesPerPage);
+
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 0);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Fetch articles + username
   useEffect(() => {
     const fetchArticles = async () => {
       try {
@@ -33,7 +40,6 @@ export default function Articles() {
         setTotal(data.total || 0);
         setLimit(data.limit || 0);
 
-        // Ambil username dari artikel pertama
         if (data.data && data.data.length > 0) {
           setUserName(data.data[0].user.username);
         }
@@ -49,7 +55,6 @@ export default function Articles() {
 
   return (
     <main>
-      {/* HEADER */}
       <header
         className={`fixed top-0 left-0 right-0 mx-auto h-[96px] flex items-center justify-between px-[60px] transition-colors duration-300 z-50 ${
           isScrolled ? "bg-blue-500 shadow-md" : "bg-transparent"
@@ -58,17 +63,16 @@ export default function Articles() {
         <div>
           <Image src="/images/logo.png" alt="logo" width={134} height={64} />
         </div>
+        <Link href="/user_profile">
         <div className="flex items-center gap-2">
-          {/* Avatar bulat */}
           <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-500 font-bold">
             {initial}
           </div>
-          {/* Nama user */}
           <span className="text-white">{username}</span>
         </div>
+        </Link>
       </header>
 
-      {/* HERO */}
       <section className="w-full">
         <div className="h-[500px] bg-cover bg-center bg-[url('/images/bg.jpg')]">
           <div className="bg-blue-500/80 h-[500px] flex items-center justify-center">
@@ -81,7 +85,6 @@ export default function Articles() {
                 Your daily dose of design insights!
               </p>
 
-              {/* Search + Select */}
               <div className="bg-blue-500 text-gray-500 rounded-lg px-2 py-2">
                 <div className="flex items-center mx-auto rounded-lg overflow-hidden shadow-md bg-white space-x-2">
                   <select className="px-4 py-3 text-gray-700 bg-white border-none outline-none">
@@ -92,8 +95,7 @@ export default function Articles() {
                   </select>
 
                   <div className="flex items-center flex-1 border-l">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
+                    <svg xmlns="http://www.w3.org/2000/svg"
                       className="h-5 w-5 ml-3 text-gray-400"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -118,7 +120,6 @@ export default function Articles() {
           </div>
         </div>
 
-        {/* ARTICLES */}
         <div className="bg-white py-12">
           <div className="container mx-auto">
             <div className="container mx-auto px-4 py-4 text-gray-600">
@@ -130,21 +131,23 @@ export default function Articles() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {articles.length > 0 ? (
-                articles.map((article) => (
+              {displayedArticles.length > 0 ? (
+                displayedArticles.map((article) => (
                   <Link key={article.id} href={`/articles/${article.id}`}>
-                    <div className="rounded-lg bg-white shadow-md hover:shadow-lg transition overflow-hidden">
-                      {article.imageUrl && (
+                    <div className="rounded-lg bg-white hover:shadow-lg transition overflow-hidden">
+                      <div className="h-[240px]">
+                        {article.imageUrl && (
                         <Image
-                          src={article.imageUrl}
+                          src={article.imageUrl || "/images/article1.jpg"}
                           alt={article.title}
                           width={500}
                           height={300}
-                          className="object-cover h-48 w-full"
+                          className="object-cover rounded-b-lg w-[500px] h-[240px]"
                         />
                       )}
 
-                      <div className="p-5">
+                      </div>
+                      <div className="py-5">
                         <p className="text-sm text-gray-500">
                           {new Date(article.createdAt).toLocaleDateString(
                             "en-US",
@@ -178,6 +181,21 @@ export default function Articles() {
                   No articles found
                 </p>
               )}
+            </div>
+
+            <div className="flex justify-center mt-8 gap-2">
+              <button disabled={page === 1} onClick={() => setPage(page - 1)}>
+                Previous
+              </button>
+              <span>
+                {page} / {totalPages}
+              </span>
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage(page + 1)}
+              >
+                Next
+              </button>
             </div>
           </div>
         </div>

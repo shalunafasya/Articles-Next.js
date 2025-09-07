@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Article } from "@/types/article";
 import Link from "next/link";
+import { useRef } from "react";
 
 interface Props {
   params: { id: string };
@@ -16,6 +17,10 @@ export default function ArticleDetail({ params }: Props) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [recommended, setRecommended] = useState<Article[]>([]);
   const [username, setUserName] = useState("");
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 0);
@@ -67,8 +72,26 @@ export default function ArticleDetail({ params }: Props) {
     fetchRecommended();
   }, [article]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const initial = username ? username.charAt(0).toUpperCase() : "?";
   if (!article) return null;
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  };
 
   return (
     <main>
@@ -87,15 +110,62 @@ export default function ArticleDetail({ params }: Props) {
             height={64}
           />
         </div>
-        <Link href="/user_profile">
-          <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-full bg-blue-200 flex items-center justify-center text-blue-500 font-bold">
-            {initial}
-          </div>
-          <span className="text-gray-600">{username}</span>
+        <div>
+          <Image src="/images/logo.png" alt="logo" width={134} height={64} />
         </div>
-        </Link>
+        <div className="relative" ref={userMenuRef}>
+          <div
+            onClick={() => setShowUserMenu((prev) => !prev)}
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <div className="w-10 h-10 rounded-full bg-blue-200 flex items-center justify-center text-blue-500 font-bold">
+              {initial}
+            </div>
+            <span className="text-black">{username}</span>
+          </div>
+
+          {showUserMenu && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
+              <Link
+                href="/user_profile"
+                className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+              >
+                My Account
+              </Link>
+              <button
+                onClick={() => setShowLogoutModal(true)}
+                className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
       </header>
+
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[300px] text-center">
+            <p className="mb-4 text-gray-700">
+              Are you sure you want to logout?
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="px-4 py-2 border rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-500 text-white rounded"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <section className="container mx-auto flex flex-col max-w-[1120px] py-30 justify-center">
         <div className="py-10">
@@ -127,54 +197,58 @@ export default function ArticleDetail({ params }: Props) {
 
         <div>
           <h1 className="font-bold mb-4">Other Articles</h1>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recommended.map((rec) => (
-              <Link key={rec.id} href={`/articles/${rec.id}`}>
-                <div className="rounded-lg bg-white hover:shadow-lg transition overflow-hidden">
-                  <div className="h-[240px]">
-                    {rec.imageUrl && (
-                    <Image
-                      src={rec.imageUrl}
-                      alt={rec.title}
-                      width={500}
-                      height={300}
-                      className="object-cover rounded-b-lg w-[500px] h-[240px]"
-                    />
-                  )}
-                  </div>
-                  <div className="py-5">
-                        <p className="text-sm text-gray-500">
-                          {new Date(article.createdAt).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            }
-                          )}
-                        </p>
 
-                        <h2 className="text-lg font-semibold mt-2">
-                          {article.title}
-                        </h2>
+          {recommended.length === 0 ? (
+            <p className="text-gray-500 italic">
+              Belum ada artikel lain yang bisa ditampilkan.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {recommended.map((rec) => (
+                <Link key={rec.id} href={`/articles/${rec.id}`}>
+                  <div className="rounded-lg bg-white hover:shadow-lg transition overflow-hidden">
+                    <div className="h-[240px]">
+                      {rec.imageUrl && (
+                        <Image
+                          src={rec.imageUrl}
+                          alt={rec.title}
+                          width={500}
+                          height={300}
+                          className="object-cover rounded-b-lg w-[500px] h-[240px]"
+                        />
+                      )}
+                    </div>
+                    <div className="py-5">
+                      <p className="text-sm text-gray-500">
+                        {new Date(rec.createdAt).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </p>
 
-                        <p className="text-sm text-gray-600 mt-2">
-                          {article.content?.slice(0, 100)}...
-                        </p>
+                      <h2 className="text-lg font-semibold mt-2">
+                        {rec.title}
+                      </h2>
 
-                        <div className="flex gap-2 mt-3 flex-wrap">
-                          <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
-                            {article.category.name || "Unknown"}
-                          </span>
-                        </div>
+                      <p className="text-sm text-gray-600 mt-2">
+                        {rec.content?.slice(0, 100)}...
+                      </p>
+
+                      <div className="flex gap-2 mt-3 flex-wrap">
+                        <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
+                          {rec.category.name || "Unknown"}
+                        </span>
                       </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
-      <footer className="fixed bottom-0 left-0 right-0 bg-blue-500 text-white py-4">
+      <footer className="bottom-0 left-0 right-0 bg-blue-500 text-white py-5 h-[100px]">
         <div className="container mx-auto text-center">
           <p>&copy; 2025 Blog Genzet. All rights reserved.</p>
         </div>

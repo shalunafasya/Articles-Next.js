@@ -3,38 +3,47 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { fakeRegister } from "@/lib/fakeAuth";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import axios from "axios";
 
+// Schema validasi form
 const registerSchema = z.object({
-  name: z.string().min(2, "Name is required"),
-  email: z.string().email("Invalid email"),
+  username: z.string().min(2, "Username is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.enum(["admin", "user"]),
+  role: z.enum(["User", "Admin"]),
 });
 type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function Register() {
   const router = useRouter();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<RegisterForm>({ resolver: zodResolver(registerSchema) });
 
-  const onSubmit = (data: RegisterForm) => {
+  const onSubmit = async (data: RegisterForm) => {
     try {
-      const { user } = fakeRegister(
-        data.name,
-        data.email,
-        data.password,
-        data.role
+      const response = await axios.post(
+        "https://test-fe.mysellerpintar.com/api/auth/register",
+        {
+          username: data.username,
+          password: data.password,
+          role: data.role,
+        }
       );
-      toast.success(`Account created for ${user.name}. Please log in.`);
+
+      toast.success(`Account created for ${data.username}. Please log in.`);
       router.push("/login");
+
     } catch (err: unknown) {
-      if (err instanceof Error) {
+      console.error("Register error:", err);
+      if (axios.isAxiosError(err)) {
+        console.log("Error response:", err.response?.data);
+        toast.error(err.response?.data?.message || "Registration failed");
+      } else if (err instanceof Error) {
         toast.error(err.message);
       } else {
         toast.error("Something went wrong");
@@ -44,7 +53,7 @@ export default function Register() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className=" bg-blue-500 rounded-2xl shadow-2xl flex w-2/3 max-w-4xl text-center text-white">
+      <div className="bg-blue-500 rounded-2xl shadow-2xl flex w-2/3 max-w-4xl text-center text-white">
         {/* Left Section */}
         <div className="w-2/5 flex flex-col items-center justify-center px-10">
           <h2 className="text-3xl font-bold mb-2">Hello, User!</h2>
@@ -80,25 +89,13 @@ export default function Register() {
               <div className="bg-gray-100 w-64 p-2 flex items-center mb-3">
                 <input
                   type="text"
-                  placeholder="Your Name"
-                  {...register("name")}
+                  placeholder="Username"
+                  {...register("username")}
                   className="bg-gray-100 outline-none text-sm flex-1"
                 />
               </div>
-              {errors.name && (
-                <p className="text-red-500 text-xs">{errors.name.message}</p>
-              )}
-
-              <div className="bg-gray-100 w-64 p-2 flex items-center mb-3">
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  {...register("email")}
-                  className="bg-gray-100 outline-none text-sm flex-1"
-                />
-              </div>
-              {errors.email && (
-                <p className="text-red-500 text-xs">{errors.email.message}</p>
+              {errors.username && (
+                <p className="text-red-500 text-xs">{errors.username.message}</p>
               )}
 
               <div className="bg-gray-100 w-64 p-2 flex items-center mb-3">
@@ -110,9 +107,7 @@ export default function Register() {
                 />
               </div>
               {errors.password && (
-                <p className="text-red-500 text-xs">
-                  {errors.password.message}
-                </p>
+                <p className="text-red-500 text-xs">{errors.password.message}</p>
               )}
 
               <div className="bg-gray-100 w-64 p-2 flex items-center mb-3">
@@ -124,8 +119,8 @@ export default function Register() {
                   <option value="" disabled>
                     Select Role
                   </option>
-                  <option value="admin">Admin</option>
-                  <option value="user">User</option>
+                  <option value="User">User</option>
+                  <option value="Admin">Admin</option>
                 </select>
               </div>
               {errors.role && (

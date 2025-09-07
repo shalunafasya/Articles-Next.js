@@ -1,42 +1,55 @@
 "use client";
 
-import { FaEnvelope } from "react-icons/fa";
+import { FaUser } from "react-icons/fa";
 import { MdLock } from "react-icons/md";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { fakeLogin } from "@/lib/fakeAuth";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Cookies from "js-cookie";
+import axios from "axios";
 
 const loginSchema = z.object({
-  email: z.email("Invalid email"),
+  username: z.string().min(1, "Username is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const router = useRouter();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
+  } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+  });
 
-  const onSubmit = (data: LoginForm) => {
-    console.log("Submit data:", data);
+  const onSubmit = async (data: LoginForm) => {
     try {
-      const { user } = fakeLogin(data.email, data.password);
-      console.log("User found:", user);
-      Cookies.set("token", "dummy-token-" + user.role, { path: "/" });
-      toast.success(`Welcome, ${user.name}`);
-      console.log("Redirecting to:", user.role === "admin" ? "/admin/articles" : "/articles");
-      router.push(user.role === "admin" ? "/admin/articles" : "/articles");
+      const response = await axios.post(
+        "https://test-fe.mysellerpintar.com/api/auth/login",
+        {
+          username: data.username,
+          password: data.password,
+        }
+      );
+
+      const { token, username, role } = response.data;
+      Cookies.set("token", token, { path: "/" });
+
+
+      toast.success(`Welcome, ${username}`);
+
+      router.push(role === "Admin" ? "/admin/articles" : "/articles");
 
     } catch (err: unknown) {
-      console.error("Login error:", err); 
-      if (err instanceof Error) {
+      console.error("Login error:", err);
+      if (axios.isAxiosError(err)) {
+        toast.error(err.response?.data?.message || "Login failed");
+      } else if (err instanceof Error) {
         toast.error(err.message);
       } else {
         toast.error("Something went wrong");
@@ -47,6 +60,7 @@ export default function Login() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-100">
       <div className="bg-white rounded-2xl shadow-2xl flex w-2/3 max-w-4xl text-center">
+        {/* Left Section */}
         <div className="w-3/5 p-5">
           <div className="text-left font-bold">
             <span className="text-blue-500">Logo</span>Ipsum
@@ -62,22 +76,21 @@ export default function Login() {
             </p>
 
             <form
-              key="login-form"
               onSubmit={handleSubmit(onSubmit)}
               className="flex flex-col items-center"
             >
               <div className="bg-gray-100 w-64 p-2 flex items-center mb-3">
-                <FaEnvelope className="text-gray-400 m-2" />
+                <FaUser className="text-gray-400 m-2" />
                 <input
-                  type="email"
-                  placeholder="Email Address"
-                  {...register("email")}
+                  type="text"
+                  placeholder="Username"
+                  {...register("username")}
                   defaultValue=""
                   className="bg-gray-100 outline-none text-sm flex-1"
                 />
               </div>
-              {errors.email && (
-                <p className="text-red-500 text-xs">{errors.email.message}</p>
+              {errors.username && (
+                <p className="text-red-500 text-xs">{errors.username.message}</p>
               )}
 
               <div className="bg-gray-100 w-64 p-2 flex items-center mb-3">
@@ -104,6 +117,7 @@ export default function Login() {
           </div>
         </div>
 
+        {/* Right Section */}
         <div className="w-2/5 bg-blue-500 text-white rounded-tr-2xl rounded-br-2xl py-36 px-12">
           <h2 className="text-3xl font-bold mb-2">Hello, User!</h2>
           <div className="border-2 w-10 border-white inline-block mb-2"></div>

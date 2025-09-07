@@ -5,22 +5,26 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Article } from "@/types/article";
 import Link from "next/link";
+import { useRef } from 'react';
+import Cookies from "js-cookie";
 
 export default function Articles() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [articles, setArticles] = useState<Article[]>([]);
   const [total, setTotal] = useState(0);
   const [limit, setLimit] = useState(0);
-  const [username, setUserName] = useState("");
+  const [username, setUserName] = useState(Cookies.get("username") || "User");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  
+
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const [page, setPage] = useState(1);
   const articlesPerPage = 9;
-
-  const startIndex = (page - 1) * articlesPerPage;
-  const endIndex = startIndex + articlesPerPage;
-  const displayedArticles = articles.slice(startIndex, endIndex);
-
-  const totalPages = Math.ceil(articles.length / articlesPerPage);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 0);
@@ -43,15 +47,72 @@ export default function Articles() {
         if (data.data && data.data.length > 0) {
           setUserName(data.data[0].user.username);
         }
+
+        const uniqueCategories = Array.from(
+          new Set(
+            (data.data || [])
+              .map((article: Article) => article.category?.name)
+              .filter(Boolean)
+          )
+        );
+        setCategories(uniqueCategories as string[]);
       } catch (err) {
         console.error("Failed to fetch articles:", err);
       }
     };
 
     fetchArticles();
+
+    const fetchUsername = async () => {
+      try {
+        const res = await axios.get(
+          "https://test-fe.mysellerpintar.com/api/articles"
+        );
+        const data = res.data;
+        if (data.data && data.data.length > 0) {
+          setUserName(data.data[0].user.username);
+        }
+      } catch (err) {
+        console.error("Failed to fetch username:", err);
+      }
+    };
+
+    fetchUsername();
+    
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredArticles = articles.filter(
+    (article) =>
+      (article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        article.content?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (selectedCategory === "" || article.category?.name === selectedCategory)
+  );
+
+  const startIndex = (page - 1) * articlesPerPage;
+  const endIndex = startIndex + articlesPerPage;
+  const displayedArticles = filteredArticles.slice(startIndex, endIndex);
+
+  const totalPages = Math.ceil(filteredArticles.length / articlesPerPage);
+
   const initial = username ? username.charAt(0).toUpperCase() : "?";
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  };
 
   return (
     <main>
@@ -63,15 +124,57 @@ export default function Articles() {
         <div>
           <Image src="/images/logo.png" alt="logo" width={134} height={64} />
         </div>
-        <Link href="/user_profile">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-500 font-bold">
-            {initial}
+        <div className="relative" ref={userMenuRef}>
+          <div
+            onClick={() => setShowUserMenu((prev) => !prev)}
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-500 font-bold">
+              {initial}
+            </div>
+            <span className="text-white">{username}</span>
           </div>
-          <span className="text-white">{username}</span>
+
+          {showUserMenu && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50">
+              <Link
+                href="/user_profile"
+                className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+              >
+                My Account
+              </Link>
+              <button
+                onClick={() => setShowLogoutModal(true)}
+                className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+              >
+                Logout
+              </button>
+            </div>
+          )}
         </div>
-        </Link>
       </header>
+
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[300px] text-center">
+            <p className="mb-4 text-gray-700">Are you sure you want to logout?</p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="px-4 py-2 border rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-500 text-white rounded"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <section className="w-full">
         <div className="h-[500px] bg-cover bg-center bg-[url('/images/bg.jpg')]">
@@ -87,15 +190,25 @@ export default function Articles() {
 
               <div className="bg-blue-500 text-gray-500 rounded-lg px-2 py-2">
                 <div className="flex items-center mx-auto rounded-lg overflow-hidden shadow-md bg-white space-x-2">
-                  <select className="px-4 py-3 text-gray-700 bg-white border-none outline-none">
-                    <option>Select category</option>
-                    <option>Design</option>
-                    <option>Tech</option>
-                    <option>Business</option>
+                  <select
+                    className="px-4 py-3 text-gray-700 bg-white border-none outline-none"
+                    value={selectedCategory}
+                    onChange={(e) => {
+                      setSelectedCategory(e.target.value);
+                      setPage(1);
+                    }}
+                  >
+                    <option value="">All categories</option>
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
                   </select>
 
                   <div className="flex items-center flex-1 border-l">
-                    <svg xmlns="http://www.w3.org/2000/svg"
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
                       className="h-5 w-5 ml-3 text-gray-400"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -111,6 +224,11 @@ export default function Articles() {
                     <input
                       type="text"
                       placeholder="Search articles"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPage(1);
+                      }}
                       className="w-full px-4 py-3 outline-none border-none"
                     />
                   </div>
@@ -125,7 +243,7 @@ export default function Articles() {
             <div className="container mx-auto px-4 py-4 text-gray-600">
               {limit > 0 && (
                 <p>
-                  Showing : {articles.length} of {total} articles
+                  Showing : {filteredArticles.length} of {total} articles
                 </p>
               )}
             </div>
@@ -137,15 +255,14 @@ export default function Articles() {
                     <div className="rounded-lg bg-white hover:shadow-lg transition overflow-hidden">
                       <div className="h-[240px]">
                         {article.imageUrl && (
-                        <Image
-                          src={article.imageUrl || "/images/article1.jpg"}
-                          alt={article.title}
-                          width={500}
-                          height={300}
-                          className="object-cover rounded-b-lg w-[500px] h-[240px]"
-                        />
-                      )}
-
+                          <Image
+                            src={article.imageUrl || "/images/article1.jpg"}
+                            alt={article.title}
+                            width={500}
+                            height={300}
+                            className="object-cover rounded-b-lg w-[500px] h-[240px]"
+                          />
+                        )}
                       </div>
                       <div className="py-5">
                         <p className="text-sm text-gray-500">
@@ -183,20 +300,13 @@ export default function Articles() {
               )}
             </div>
 
-            <div className="flex justify-center mt-8 gap-2">
-              <button disabled={page === 1} onClick={() => setPage(page - 1)}>
-                Previous
-              </button>
-              <span>
-                {page} / {totalPages}
-              </span>
-              <button
-                disabled={page === totalPages}
-                onClick={() => setPage(page + 1)}
-              >
-                Next
-              </button>
-            </div>
+            
+              <div className="flex justify-center mt-8 gap-2">
+                <button disabled={page === 1} onClick={() => setPage(page - 1)} className="px-3 py-1 border rounded disabled:opacity-50"> Previous </button>
+                <span> {page} / {totalPages}</span>
+                <button disabled={page === totalPages} onClick={() => setPage(page + 1)} className="px-3 py-1 border rounded disabled:opacity-50"> Next </button>
+              </div>
+            
           </div>
         </div>
       </section>

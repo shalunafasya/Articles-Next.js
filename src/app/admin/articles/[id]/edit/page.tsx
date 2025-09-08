@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import axios from "axios";
 import Cookies from "js-cookie";
+import TextEditor from "@/components/TiptapEditor";
+import parse from "html-react-parser"
+import Image from "next/image";
 
 export default function EditArticlePage() {
   const { id } = useParams();
@@ -16,6 +19,7 @@ export default function EditArticlePage() {
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [previewThumbnail, setPreviewThumbnail] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
   const fetchCategories = async () => {
@@ -128,11 +132,10 @@ export default function EditArticlePage() {
   };
 
   return (
-    <div className="bg-white rounded-md shadow p-6 max-w-2xl mx-auto mt-10">
+    <div className="bg-white rounded-md shadow p-6 max-w m-1">
       <h1 className="text-xl font-semibold mb-6">Edit Article</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Thumbnail */}
         <div>
           <label className="block font-medium mb-2">Thumbnail</label>
           <input type="file" accept="image/*" onChange={handleFileChange} />
@@ -144,7 +147,6 @@ export default function EditArticlePage() {
           )}
         </div>
 
-        {/* Title */}
         <div>
           <label className="block font-medium mb-2">Title</label>
           <input
@@ -174,12 +176,7 @@ export default function EditArticlePage() {
 
         <div>
           <label className="block font-medium mb-2">Content</label>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={8}
-            className="w-full border rounded-md px-3 py-2"
-          />
+          <TextEditor value={content} onChange={setContent}/>
         </div>
 
         <div className="flex justify-end gap-3">
@@ -191,6 +188,13 @@ export default function EditArticlePage() {
             Cancel
           </button>
           <button
+            type="button"
+            onClick={() => setShowPreview(true)}
+            className="px-4 py-2 bg-gray-300 rounded-md"
+          >
+            Preview
+          </button>
+          <button
             type="submit"
             disabled={loading}
             className="px-4 py-2 bg-blue-500 text-white rounded-md"
@@ -199,6 +203,50 @@ export default function EditArticlePage() {
           </button>
         </div>
       </form>
+
+      {showPreview && (
+              <div className="fixed inset-0 bg-white overflow-y-auto z-50">
+                <header className="sticky top-0 bg-white shadow-md border-b px-10 py-5 flex justify-between items-center">
+                  <h1 className="text-xl font-bold">Preview Article</h1>
+                  <button
+                    onClick={() => setShowPreview(false)}
+                    className="text-red-500 font-semibold"
+                  >
+                    ✖ Close
+                  </button>
+                </header>
+      
+                <section className="container mx-auto max-w-[1120px] py-10">
+                  <p className="text-center text-sm text-gray-500 mb-6">
+                    {new Date().toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}{" "}
+                    . Created by You
+                  </p>
+      
+                  <h1 className="text-3xl font-bold mb-4 text-center">{title || "Untitled"}</h1>
+      
+                  {previewThumbnail && (
+                    <Image
+                      src={previewThumbnail}
+                      alt="Preview Thumbnail"
+                      width={1120}
+                      height={480}
+                      className="rounded-lg mb-6 w-[1120px] h-[480px] object-cover"
+                    />
+                  )}
+      
+                  <div className="prose max-w-none">{parse(content) || "No content yet."}</div>
+      
+                </section>
+      
+                <footer className="bg-blue-500 text-white py-5 h-[100px] text-center">
+                  <p>&copy; 2025 Blog Genzet. All rights reserved.</p>
+                </footer>
+              </div>
+            )}
     </div>
   );
 }

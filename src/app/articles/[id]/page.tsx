@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Article } from "@/types/article";
 import Link from "next/link";
 import { useRef } from "react";
+import parse from "html-react-parser";
 
 interface Props {
   params: { id: string };
@@ -192,7 +193,7 @@ export default function ArticleDetail({ params }: Props) {
             />
           )}
 
-          <div className="prose max-w-none">{article.content}</div>
+          <div className="prose max-w-none">{parse(article.content)}</div>
         </div>
 
         <div>
@@ -232,7 +233,7 @@ export default function ArticleDetail({ params }: Props) {
                       </h2>
 
                       <p className="text-sm text-gray-600 mt-2">
-                        {rec.content?.slice(0, 100)}...
+                        {parse(rec.content?.slice(0, 100))}...
                       </p>
 
                       <div className="flex gap-2 mt-3 flex-wrap">

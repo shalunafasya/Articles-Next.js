@@ -59,7 +59,6 @@ export default function CategoriesPage() {
   }
 };
 
-
   const handleAddCategory = async (formData: CategoryFormData) => {
   try {
     const token = Cookies.get("token");

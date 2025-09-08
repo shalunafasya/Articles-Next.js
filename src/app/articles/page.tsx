@@ -7,6 +7,7 @@ import { Article } from "@/types/article";
 import Link from "next/link";
 import { useRef } from 'react';
 import Cookies from "js-cookie";
+import parse from "html-react-parser";
 
 export default function Articles() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -281,7 +282,7 @@ export default function Articles() {
                         </h2>
 
                         <p className="text-sm text-gray-600 mt-2">
-                          {article.content?.slice(0, 100)}...
+                          {parse(article.content?.slice(0, 100))}...
                         </p>
 
                         <div className="flex gap-2 mt-3 flex-wrap">

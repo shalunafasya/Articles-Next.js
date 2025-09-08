@@ -4,6 +4,11 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { Article } from "@/types/article";
+import { FaTrash } from "react-icons/fa";
+import Image from "next/image";
+import TextEditor from "@/components/TiptapEditor";
+import parse from "html-react-parser"
+import { useRouter } from "next/navigation";
 
 export default function AddArticlePage() {
   const [title, setTitle] = useState("");
@@ -12,6 +17,9 @@ export default function AddArticlePage() {
   const [content, setContent] = useState("");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [previewThumbnail, setPreviewThumbnail] = useState<string>("");
+  const [showPreview, setShowPreview] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -51,8 +59,15 @@ export default function AddArticlePage() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setThumbnail(e.target.files[0]);
+      const file = e.target.files[0];
+      setThumbnail(file);
+      setPreviewThumbnail(URL.createObjectURL(file));
     }
+  };
+
+  const handleDeleteThumbnail = () => {
+    setThumbnail(null);
+    setPreviewThumbnail("");
   };
 
   const handleUploadThumbnail = async (): Promise<string | null> => {
@@ -116,6 +131,7 @@ export default function AddArticlePage() {
       setCategory("");
       setContent("");
       setThumbnail(null);
+      setPreviewThumbnail("");
     } catch (err) {
       console.error("Failed to upload article:", err);
       alert("Upload failed!");
@@ -125,14 +141,31 @@ export default function AddArticlePage() {
   };
 
   return (
-    <div className="bg-white rounded-md shadow p-6 max-w-2xl mx-auto mt-10">
+    <div className="bg-white rounded-md shadow p-6 max-w  m-1">
       <h1 className="text-xl font-semibold mb-6">Create Article</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block font-medium mb-2">Thumbnail</label>
-          <input type="file" accept="image/*" onChange={handleFileChange} />
-          {thumbnail && <p>Selected: {thumbnail.name}</p>}
+          <div className="flex items-center gap-3">
+            <input type="file" accept="image/*" onChange={handleFileChange} />
+            {thumbnail && (
+              <button
+                type="button"
+                onClick={handleDeleteThumbnail}
+                className="text-red-500"
+              >
+                <FaTrash />
+              </button>
+            )}
+          </div>
+          {previewThumbnail && (
+            <img
+              src={previewThumbnail}
+              alt="Preview"
+              className="mt-3 w-32 h-32 object-cover rounded"
+            />
+          )}
         </div>
 
         <div>
@@ -164,12 +197,7 @@ export default function AddArticlePage() {
 
         <div>
           <label className="block font-medium mb-2">Content</label>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={8}
-            className="w-full border rounded-md px-3 py-2"
-          />
+          <TextEditor value={content} onChange={setContent} />
         </div>
 
         <div className="flex justify-end gap-3">
@@ -180,15 +208,73 @@ export default function AddArticlePage() {
               setCategory("");
               setContent("");
               setThumbnail(null);
+              setPreviewThumbnail("");
+              router.back()
             }}
+            className="px-4 py-2 border rounded-md"
           >
             Cancel
           </button>
-          <button type="submit" disabled={loading}>
+          <button
+            type="button"
+            onClick={() => setShowPreview(true)}
+            className="px-4 py-2 bg-gray-300 rounded-md"
+          >
+            Preview
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md"
+          >
             {loading ? "Uploading..." : "Upload"}
           </button>
         </div>
       </form>
+
+      {showPreview && (
+        <div className="fixed inset-0 bg-white overflow-y-auto z-50">
+          <header className="sticky top-0 bg-white shadow-md border-b px-10 py-5 flex justify-between items-center">
+            <h1 className="text-xl font-bold">Preview Article</h1>
+            <button
+              onClick={() => setShowPreview(false)}
+              className="text-red-500 font-semibold"
+            >
+              ✖ Close
+            </button>
+          </header>
+
+          <section className="container mx-auto max-w-[1120px] py-10">
+            <p className="text-center text-sm text-gray-500 mb-6">
+              {new Date().toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}{" "}
+              . Created by You
+            </p>
+
+            <h1 className="text-3xl font-bold mb-4 text-center">{title || "Untitled"}</h1>
+
+            {previewThumbnail && (
+              <Image
+                src={previewThumbnail}
+                alt="Preview Thumbnail"
+                width={1120}
+                height={480}
+                className="rounded-lg mb-6 w-[1120px] h-[480px] object-cover"
+              />
+            )}
+
+            <div className="prose max-w-none">{parse(content) || "No content yet."}</div>
+
+          </section>
+
+          <footer className="bg-blue-500 text-white py-5 h-[100px] text-center">
+            <p>&copy; 2025 Blog Genzet. All rights reserved.</p>
+          </footer>
+        </div>
+      )}
     </div>
   );
 }

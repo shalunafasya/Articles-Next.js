@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Cookies from "js-cookie";
 import axios from "axios";
+import Link from "next/link";
+import Image from "next/image";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -59,21 +61,11 @@ export default function Login() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className="bg-white rounded-2xl shadow-2xl flex w-2/3 max-w-4xl text-center">
-        {/* Left Section */}
-        <div className="w-3/5 p-5">
-          <div className="text-left font-bold">
-            <span className="text-blue-500">Logo</span>Ipsum
-          </div>
-          <div className="py-10">
-            <h2 className="text-3xl font-bold text-blue-500 mb-2">
-              Log in to Account
-            </h2>
-            <div className="border-2 w-10 border-blue-500 inline-block mb-2"></div>
-            <p className="text-1xl font-bold my-3">Hello, Welcome Back 👋</p>
-            <p className="text-gray-500 my-3">
-              Log in to your account to read and manage articles.
-            </p>
+      <div className="bg-white rounded-2xl shadow-2xl flex w-[400px] text-center">
+        <div className="w-full p-5">
+            <Image src="/images/logocolor.png" alt="Logo" width={100} height={100} className=" mx-auto items-center justify-center mt-10"></Image>
+          
+          <div className="py-5">
 
             <form
               onSubmit={handleSubmit(onSubmit)}
@@ -109,27 +101,16 @@ export default function Login() {
 
               <button
                 type="submit"
-                className="border-2 border-blue-500 text-blue-500 rounded-full px-12 py-2 font-semibold hover:bg-blue-500 hover:text-white mt-3"
+                className="border-2 bg-blue-500 text-white rounded px-12 py-2 font-semibold hover:bg-white hover:text-blue-500 mt-3 w-64"
               >
                 Log In
               </button>
             </form>
-          </div>
-        </div>
 
-        {/* Right Section */}
-        <div className="w-2/5 bg-blue-500 text-white rounded-tr-2xl rounded-br-2xl py-36 px-12">
-          <h2 className="text-3xl font-bold mb-2">Hello, User!</h2>
-          <div className="border-2 w-10 border-white inline-block mb-2"></div>
-          <p className="mb-2">
-            Fill up personal information and start journey with us
-          </p>
-          <a
-            href="/register"
-            className="border-2 border-white rounded-full px-12 py-2 inline-block font-semibold hover:bg-white hover:text-blue-500"
-          >
-            Register
-          </a>
+            <p className="text-gray-500 my-3">
+              Dont have an account?{" "}<Link href="/register" className="text-blue-500">Register</Link>
+            </p>
+          </div>
         </div>
       </div>
     </main>

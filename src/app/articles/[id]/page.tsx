@@ -8,18 +8,17 @@ import { Article } from "@/types/article";
 import Link from "next/link";
 import { useRef } from "react";
 import parse from "html-react-parser";
+import { useParams } from "next/navigation";
 
-interface Props {
-  params: { id: string };
-}
 
-export default function ArticleDetail({ params }: Props) {
+export default function ArticleDetail() {
   const [article, setArticle] = useState<Article | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [recommended, setRecommended] = useState<Article[]>([]);
   const [username, setUserName] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const params = useParams(); 
 
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -42,7 +41,7 @@ export default function ArticleDetail({ params }: Props) {
       }
     };
     fetchArticle();
-  }, [params.id]);
+  }, [params?.id]);
 
   useEffect(() => {
     if (!article) return;
@@ -97,7 +96,7 @@ export default function ArticleDetail({ params }: Props) {
   return (
     <main>
       <header
-        className={`fixed top-0 left-0 right-0 mx-auto h-[96px] flex items-center justify-between px-[60px] transition-colors duration-300 z-50 ${
+        className={`fixed top-0 left-0 right-0 mx-auto h-[80px] flex items-center justify-between px-4 sm:px-6 lg:px-16 transition-colors duration-300 z-50 ${
           isScrolled
             ? "bg-white shadow-md border-b border-gray-200"
             : "bg-white shadow-md border-b border-gray-200"
@@ -107,8 +106,8 @@ export default function ArticleDetail({ params }: Props) {
           <Image
             src="/images/logocolor.png"
             alt="logo"
-            width={134}
-            height={64}
+            width={100}
+            height={48}
           />
         </div>
         <div>

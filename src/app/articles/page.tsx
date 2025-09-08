@@ -118,12 +118,12 @@ export default function Articles() {
   return (
     <main>
       <header
-        className={`fixed top-0 left-0 right-0 mx-auto h-[96px] flex items-center justify-between px-[60px] transition-colors duration-300 z-50 ${
+        className={`fixed top-0 left-0 right-0 mx-auto h-[80px] flex items-center justify-between px-4 sm:px-6 lg:px-16 transition-colors duration-300 z-50 ${
           isScrolled ? "bg-blue-500 shadow-md" : "bg-transparent"
         }`}
       >
         <div>
-          <Image src="/images/logo.png" alt="logo" width={134} height={64} />
+          <Image src="/images/logo.png" alt="logo" width={100} height={48} />
         </div>
         <div className="relative" ref={userMenuRef}>
           <div
@@ -182,10 +182,10 @@ export default function Articles() {
           <div className="bg-blue-500/80 h-[500px] flex items-center justify-center">
             <div className="container mx-auto flex flex-col max-w-[730px] items-center text-white text-center px-2">
               <p className="text-[16px]">Blog Genzet</p>
-              <h1 className="text-2xl font-bold text-[48px] leading-tight">
+              <h1 className="font-bold text-2xl sm:text-3xl lg:text-5xl leading-tight">
                 The Journal : Design Resources, Interviews, and Industry News
               </h1>
-              <p className="text-[24px] mb-4">
+              <p className="text-[20px] mb-4">
                 Your daily dose of design insights!
               </p>
 
@@ -254,14 +254,14 @@ export default function Articles() {
                 displayedArticles.map((article) => (
                   <Link key={article.id} href={`/articles/${article.id}`}>
                     <div className="rounded-lg bg-white hover:shadow-lg transition overflow-hidden">
-                      <div className="h-[240px]">
+                      <div className="h-[180px] sm:h-[200px] lg:h-[240px]">
                         {article.imageUrl && (
                           <Image
                             src={article.imageUrl || "/images/article1.jpg"}
                             alt={article.title}
                             width={500}
                             height={300}
-                            className="object-cover rounded-b-lg w-[500px] h-[240px]"
+                            className="object-cover rounded-b-lg w-full h-full"
                           />
                         )}
                       </div>
@@ -281,9 +281,9 @@ export default function Articles() {
                           {article.title}
                         </h2>
 
-                        <p className="text-sm text-gray-600 mt-2">
+                        <div className="text-sm text-gray-600 mt-2">
                           {parse(article.content?.slice(0, 100))}...
-                        </p>
+                        </div>
 
                         <div className="flex gap-2 mt-3 flex-wrap">
                           <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
@@ -311,6 +311,11 @@ export default function Articles() {
           </div>
         </div>
       </section>
+      <footer className="bottom-0 left-0 right-0 bg-blue-500 text-white py-5 h-[100px]">
+        <div className="container mx-auto text-center">
+          <p>&copy; 2025 Blog Genzet. All rights reserved.</p>
+        </div>
+      </footer>
     </main>
   );
 }

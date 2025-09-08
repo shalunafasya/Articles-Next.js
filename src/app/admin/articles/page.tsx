@@ -1,131 +1,142 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { Article } from "@/types/article";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import apiClient from "@/lib/apiClient";
 import Cookies from "js-cookie";
+import { Article } from "@/types/article";
 
 export default function ArticlesPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [total, setTotal] = useState(0);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [limit, setLimit] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
+    []
+  );
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await apiClient.get("/categories");
+      setCategories(res.data.data || []);
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
+    }
+  };
+
+  const fetchArticles = async () => {
+    try {
+      setLoading(true);
+      const res = await apiClient.get("/articles", {
+        params: {
+          page,
+          limit,
+          title: searchTerm || undefined,
+          categoryId: selectedCategory ? Number(selectedCategory) : undefined
+
+        },
+      });
+
+      const data = res.data;
+      console.log("Fetched categories:", res.data);
+
+      setArticles(data.data || []);
+      setTotal(data.total || 0);
+      setLimit(data.limit || 10);
+      console.log("Fetching articles with categoryId:", selectedCategory);
+    } catch (err) {
+      console.error("Failed to fetch articles:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchArticles = async () => {
-      try {
-        const res = await axios.get(
-          "https://test-fe.mysellerpintar.com/api/articles"
-        );
-        const data = res.data;
-        setArticles(data.data || []);
-        setTotal(data.total || 0);
+    fetchCategories();
+    console.log("Fetched categories:", categories);
 
-        const uniqueCategories = Array.from(
-          new Set(
-            (data.data || [])
-              .map((article: Article) => article.category?.name)
-              .filter(Boolean)
-          )
-        );
-        setCategories(uniqueCategories as string[]);
-      } catch (err) {
-        console.error("Failed to fetch articles:", err);
-      }
-    };
-    fetchArticles();
   }, []);
 
-  const filteredArticles = articles.filter(
-    (article) =>
-      (article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.content?.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (selectedCategory === "" || article.category?.name === selectedCategory)
-  );
+  const fetchArticlesCallback = useCallback(fetchArticles, []);
+
+useEffect(() => {
+  const timer = setTimeout(() => {
+    fetchArticlesCallback();
+  }, 500); 
+  console.log("Fetching articles with categoryId:", selectedCategory, selectedCategory.length);
+
+  return () => clearTimeout(timer);
+}, [page, limit, searchTerm, selectedCategory, fetchArticlesCallback]);
+
+  const totalPages = Math.ceil(total / limit);
 
   const handleDelete = async (id: string) => {
-  try {
-    // Ambil token dari cookies
-    const token = Cookies.get("token"); 
-    if (!token) {
-      alert("You are not authorized!");
-      return;
+    try {
+      const token = Cookies.get("token");
+      if (!token) {
+        alert("You are not authorized!");
+        return;
+      }
+
+      await apiClient.delete(`/articles/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setArticles(articles.filter((article) => article.id !== id));
+      setDeleteModal({ open: false, id: null });
+      alert("Article deleted successfully!");
+    } catch (error: unknown) {
+      console.error("Failed to delete article:", error);
+      alert(`Delete failed! ${error || ""}`);
     }
-
-    await axios.delete(`https://test-fe.mysellerpintar.com/api/articles/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    // Update state setelah berhasil delete
-    setArticles(articles.filter((article) => article.id !== id));
-    setDeleteModal({ open: false, id: null });
-    alert("Article deleted successfully!");
-  } catch (error: unknown) {
-    console.error("Failed to delete article:", error);
-    alert(`Delete failed! ${error || ""}`);
-  }
-};
+  };
 
   return (
     <div className="bg-white rounded-lg shadow">
-      <p className="p-6 border">Total Articles : {filteredArticles.length}</p>
+      <p className="border-b pb-4 p-6">Total Articles: {total}</p>
 
-      <div className="flex justify-between mt-4 overflow-x-auto bg-gray-50">
-        <div className="flex items-center ml-6 gap-2">
+      <div className="flex justify-between p-6">
+        <div className="flex gap-2">
           <select
-            className="text-gray-700 bg-white border p-2 rounded"
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
+            onChange={(e) => { setSelectedCategory(String(e.target.value)); setPage(1); }}
+            className="border p-2 rounded"
           >
             <option value="">All categories</option>
             {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
+              <option key={cat.id} value={String(cat.id.trim())}>
+                {cat.name}
               </option>
             ))}
           </select>
 
-          <div className="flex items-center p-2 border rounded">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 ml-3 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"
-              />
-            </svg>
-            <input
-              type="text"
-              placeholder="Search articles"
-              className="outline-none border-none ml-2"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+          <input
+            type="text"
+            placeholder="Search articles"
+            value={searchTerm}
+            onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+            className="border p-2 rounded"
+          />
         </div>
 
         <Link href={`/admin/articles/add`}>
-          <button className="border-2 bg-blue-500 text-white rounded-lg mr-6 px-6 py-2 font-semibold hover:bg-white hover:border-blue-500 hover:text-blue-500">
-            + Add Articles
+          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            + Add Article
           </button>
         </Link>
       </div>
 
-      <div className="mt-4 overflow-x-auto">
+      {/* Articles Table */}
+      <div className="overflow-x-auto">
         <table className="w-full border border-gray-300 text-sm">
           <thead className="bg-gray-100 border-b">
             <tr>
-              <th className="p-2 w-[225px]">Thumbnails</th>
+              <th className="p-2 w-[225px]">Thumbnail</th>
               <th className="p-2 w-[225px]">Title</th>
               <th className="p-2 w-[225px]">Category</th>
               <th className="p-2 w-[225px]">Created At</th>
@@ -133,13 +144,17 @@ export default function ArticlesPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredArticles.length > 0 ? (
-              filteredArticles.map((article) => (
-                <tr key={article.id} className="hover:bg-gray-50 h-[84px]">
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="p-4 text-center">Loading...</td>
+              </tr>
+            ) : articles.length > 0 ? (
+              articles.map((article) => (
+                <tr key={article.id} className="hover:bg-gray-50 text-gray-500 h-[84px]">
                   <td className="p-2 text-center">
                     {article.imageUrl && (
                       <Image
-                        src={article.imageUrl || "/images/article1.jpg"}
+                        src={article.imageUrl}
                         alt={article.title}
                         width={60}
                         height={60}
@@ -147,44 +162,30 @@ export default function ArticlesPage() {
                       />
                     )}
                   </td>
-                  <td className="p-2 text-gray-500">{article.title}</td>
-                  <td className="p-2 text-center text-gray-500">
-                    {article.category?.name || "No category"}
-                  </td>
-                  <td className="p-2 text-center text-gray-500">
-                    {new Date(article.createdAt).toLocaleString()}
-                  </td>
+                  <td className="p-2">{article.title}</td>
+                  <td className="p-2 text-center">{article.category?.name || "No category"}</td>
+                  <td className="p-2 text-center">{new Date(article.createdAt).toLocaleString()}</td>
                   <td className="p-2 text-center space-x-2">
-                    <Link
-                      href={`/articles/${article.id}`}
-                      className="text-blue-500 hover:underline"
-                    >
-                      Preview
-                    </Link>
-                    <Link
-                      href={`/admin/articles/${article.id}/edit`}
-                      className="text-blue-500 hover:underline"
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      onClick={() => setDeleteModal({ open: true, id: article.id })}
-                      className="text-red-500 hover:underline"
-                    >
-                      Delete
-                    </button>
+                    <Link href={`/articles/${article.id}`} className="text-blue-500 hover:underline">Preview</Link>
+                    <Link href={`/admin/articles/${article.id}/edit`} className="text-blue-500 hover:underline">Edit</Link>
+                    <button onClick={() => setDeleteModal({ open: true, id: article.id })} className="text-red-500 hover:underline">Delete</button>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="p-2 text-center border">
-                  No articles found.
-                </td>
+                <td colSpan={5} className="p-2 text-center">No articles found.</td>
               </tr>
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-center items-center gap-4 mt-4 mb-4 p-4">
+        <button onClick={() => setPage((prev) => Math.max(prev - 1, 1))} disabled={page === 1} className="px-3 py-1 border rounded disabled:opacity-50">Previous</button>
+        <span>{page} / {totalPages}</span>
+        <button onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))} disabled={page === totalPages || totalPages === 0} className="px-3 py-1 border rounded disabled:opacity-50">Next</button>
       </div>
 
       {/* Delete Modal */}
@@ -194,18 +195,8 @@ export default function ArticlesPage() {
             <h2 className="text-lg font-semibold mb-4">Confirm Delete</h2>
             <p className="mb-4">Are you sure you want to delete this article?</p>
             <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setDeleteModal({ open: false, id: null })}
-                className="px-4 py-2 border rounded"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => deleteModal.id && handleDelete(deleteModal.id)}
-                className="px-4 py-2 bg-red-500 text-white rounded"
-              >
-                Confirm
-              </button>
+              <button onClick={() => setDeleteModal({ open: false, id: null })} className="px-4 py-2 border rounded">Cancel</button>
+              <button onClick={() => deleteModal.id && handleDelete(deleteModal.id)} className="px-4 py-2 bg-red-500 text-white rounded">Confirm</button>
             </div>
           </div>
         </div>

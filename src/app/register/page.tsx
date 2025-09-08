@@ -6,6 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import axios from "axios";
+import Link from "next/link";
+import Image from "next/image";
 
 // Schema validasi form
 const registerSchema = z.object({
@@ -37,7 +39,6 @@ export default function Register() {
 
       toast.success(`Account created for ${data.username}. Please log in.`);
       router.push("/login");
-
     } catch (err: unknown) {
       console.error("Register error:", err);
       if (axios.isAxiosError(err)) {
@@ -53,39 +54,25 @@ export default function Register() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className="bg-blue-500 rounded-2xl shadow-2xl flex w-2/3 max-w-4xl text-center text-white">
-        {/* Left Section */}
-        <div className="w-2/5 flex flex-col items-center justify-center px-10">
-          <h2 className="text-3xl font-bold mb-2">Hello, User!</h2>
-          <div className="border-2 w-10 border-white inline-block mb-2"></div>
-          <p className="mb-2">Already have an account?</p>
-          <a
-            href="/login"
-            className="border-2 border-white rounded-full px-12 py-2 inline-block font-semibold hover:bg-white hover:text-blue-500"
-          >
-            Login
-          </a>
-        </div>
+      <div className="bg-white rounded-2xl shadow-2xl flex w-[400px] text-center">
+        <div className="w-full py-5">
+          <Image
+            src="/images/logocolor.png"
+            alt="Logo"
+            width={100}
+            height={100}
+            className=" mx-auto items-center justify-center mt-10"
+          ></Image>
 
-        {/* Register Form */}
-        <div className="w-3/5 bg-white text-blue-500 rounded-tr-2xl rounded-br-2xl py-10 px-12">
-          <div className="text-left font-bold">
-            <span className="text-black">Logo</span>Ipsum
-          </div>
-          <div className="py-10">
-            <h2 className="text-3xl font-bold text-blue-500 mb-2">Register</h2>
-            <div className="border-2 w-10 border-blue-500 inline-block mb-2"></div>
-            <p className="text-1xl text-black font-bold my-3">
-              Hello, Welcome to our page 👋
-            </p>
-            <p className="text-gray-500 my-3">
-              Fill up personal information and start journey with us
-            </p>
-
+          <div className="py-5">
             <form
               onSubmit={handleSubmit(onSubmit)}
               className="flex flex-col items-center"
             >
+              <div className="w-64 text-left">
+                <p className="font-medium">Username</p>
+              </div>
+
               <div className="bg-gray-100 w-64 p-2 flex items-center mb-3">
                 <input
                   type="text"
@@ -95,9 +82,14 @@ export default function Register() {
                 />
               </div>
               {errors.username && (
-                <p className="text-red-500 text-xs">{errors.username.message}</p>
+                <p className="text-red-500 text-xs">
+                  {errors.username.message}
+                </p>
               )}
 
+              <div className="w-64 text-left">
+                <p className="font-medium">Password</p>
+              </div>
               <div className="bg-gray-100 w-64 p-2 flex items-center mb-3">
                 <input
                   type="password"
@@ -107,9 +99,14 @@ export default function Register() {
                 />
               </div>
               {errors.password && (
-                <p className="text-red-500 text-xs">{errors.password.message}</p>
+                <p className="text-red-500 text-xs">
+                  {errors.password.message}
+                </p>
               )}
 
+              <div className="w-64 text-left">
+                <p className="font-medium">Role</p>
+              </div>
               <div className="bg-gray-100 w-64 p-2 flex items-center mb-3">
                 <select
                   {...register("role")}
@@ -129,11 +126,18 @@ export default function Register() {
 
               <button
                 type="submit"
-                className="border-2 border-blue-500 text-blue-500 rounded-full px-12 py-2 inline-block font-semibold hover:bg-blue-500 hover:text-white"
+                className="border-2 bg-blue-500 text-white rounded w-64 px-12 py-2 inline-block font-semibold hover:border-blue-500 hover:text-blue-500"
               >
                 Register
               </button>
             </form>
+
+            <p className="text-gray-500 my-3">
+              Already have an account?{" "}
+              <Link href="/login" className="text-blue-500">
+                Login
+              </Link>
+            </p>
           </div>
         </div>
       </div>

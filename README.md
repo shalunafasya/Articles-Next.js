@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Home Test Frontend Web Developer – Blog Management Web
 
-## Getting Started
+Aplikasi **manajemen artikel** berbasis **Next.js** dengan role **User** dan **Admin**. Aplikasi mendukung autentikasi dan otorisasi, sehingga tiap role hanya dapat mengakses fitur yang sesuai. Tampilan dibuat responsif dan terintegrasi dengan API yang disediakan ([Base URL](https://test-fe.mysellerpintar.com/api)).
 
-First, run the development server:
+## Demo
+URL Hosting: [https://articles-next-js-2exa.vercel.app/login](https://articles-next-js-2exa.vercel.app/login)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Fitur
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 1. User
+- **Authentication**
+  - Login dan Register dengan validasi form
+  - Redirect ke list artikel setelah login/register sukses
+  - Logout dengan redirect ke halaman login
+- **List Artikel**
+  - Filter artikel berdasarkan kategori
+  - Searching artikel dengan debounce 300-500ms
+  - Pagination jika data lebih dari 9 item
+- **Detail Artikel**
+  - Menampilkan konten artikel lengkap
+  - Menampilkan maksimal 3 artikel dari kategori yang sama sebagai "Other Articles"
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 2. Admin
+- **Authentication**
+  - Login dan Register dengan validasi form
+  - Redirect ke list artikel setelah login/register sukses
+  - Logout dengan redirect ke halaman login
+- **List Categories**
+  - Searching category dengan debounce 300-500ms
+  - Pagination jika data lebih dari 10 item
+- **Create/Edit Category**
+  - Form validation menggunakan Zod + React Hook Form
+  - Editor Tiptap untuk konten artikel
+- **List Artikel**
+  - Filter artikel berdasarkan kategori
+  - Searching artikel dengan debounce 300-500ms
+  - Pagination jika data lebih dari 10 item
+- **Create/Edit Artikel**
+  - Form validation menggunakan Zod + React Hook Form
+  - Preview sebelum submit (fetch API)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Teknologi
+- **Framework**: Next.js 
+- **Styling**: Tailwind CSS 
+- **API**: Axios
+- **Form Validation**: Zod + React Hook Form
+- **Version Control**: Git + GitHub
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Cara Menjalankan Lokal
+1. Clone repository:
+   ```bash
+   git clone https://github.com/username/repo.git
+   cd repo

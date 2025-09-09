@@ -49,5 +49,5 @@ URL Hosting: [https://articles-next-js-2exa.vercel.app/login](https://articles-n
 ## Cara Menjalankan Lokal
 1. Clone repository:
    ```bash
-   git clone https://github.com/username/repo.git
+   gh repo clone shalunafasya/Articles-Next.js
    cd repo

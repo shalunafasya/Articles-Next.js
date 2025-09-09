@@ -41,6 +41,7 @@ export default function Articles() {
         );
 
         const data = res.data;
+        
         setArticles(data.data || []);
         setTotal(data.total || 0);
         setLimit(data.limit || 0);
@@ -301,7 +302,6 @@ export default function Articles() {
               )}
             </div>
 
-            
               <div className="flex justify-center mt-8 gap-2">
                 <button disabled={page === 1} onClick={() => setPage(page - 1)} className="px-3 py-1 border rounded disabled:opacity-50"> Previous </button>
                 <span> {page} / {totalPages}</span>

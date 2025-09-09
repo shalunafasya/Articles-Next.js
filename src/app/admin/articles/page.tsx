@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import apiClient from "@/lib/apiClient";
@@ -9,16 +9,16 @@ import { Article } from "@/types/article";
 
 export default function ArticlesPage() {
   const [articles, setArticles] = useState<Article[]>([]);
-  const [total, setTotal] = useState(0);
-  const [limit, setLimit] = useState(10);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
-    []
-  );
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [limit, setLimit] = useState(0);
+
+  const articlesPerPage = 10;
 
   const fetchCategories = async () => {
     try {
@@ -32,23 +32,11 @@ export default function ArticlesPage() {
   const fetchArticles = async () => {
     try {
       setLoading(true);
-      const res = await apiClient.get("/articles", {
-        params: {
-          page,
-          limit,
-          title: searchTerm || undefined,
-          categoryId: selectedCategory ? Number(selectedCategory) : undefined
+      const res = await apiClient.get("/articles"); // ambil semua artikel
+      setArticles(res.data.data || []);
 
-        },
-      });
-
-      const data = res.data;
-      console.log("Fetched categories:", res.data);
-
-      setArticles(data.data || []);
-      setTotal(data.total || 0);
-      setLimit(data.limit || 10);
-      console.log("Fetching articles with categoryId:", selectedCategory);
+      setTotal(res.data.total || 0);
+      setLimit(res.data.limit || 0);
     } catch (err) {
       console.error("Failed to fetch articles:", err);
     } finally {
@@ -58,22 +46,8 @@ export default function ArticlesPage() {
 
   useEffect(() => {
     fetchCategories();
-    console.log("Fetched categories:", categories);
-
+    fetchArticles();
   }, []);
-
-  const fetchArticlesCallback = useCallback(fetchArticles, []);
-
-useEffect(() => {
-  const timer = setTimeout(() => {
-    fetchArticlesCallback();
-  }, 500); 
-  console.log("Fetching articles with categoryId:", selectedCategory, selectedCategory.length);
-
-  return () => clearTimeout(timer);
-}, [page, limit, searchTerm, selectedCategory, fetchArticlesCallback]);
-
-  const totalPages = Math.ceil(total / limit);
 
   const handleDelete = async (id: string) => {
     try {
@@ -96,20 +70,31 @@ useEffect(() => {
     }
   };
 
+  const filteredArticles = articles.filter(
+    (article) =>
+      (article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       article.content?.toLowerCase().includes(searchTerm.toLowerCase())) 
+
+  );
+
+  const totalPages = Math.ceil(total / limit);
+  const startIndex = (page - 1) * articlesPerPage;
+  const displayedArticles = filteredArticles.slice(startIndex, startIndex + articlesPerPage);
+
   return (
     <div className="bg-white rounded-lg shadow">
-      <p className="border-b pb-4 p-6">Total Articles: {total}</p>
+      <p className="border-b pb-4 p-6">Total Articles: {filteredArticles.length}</p>
 
       <div className="flex justify-between p-6">
         <div className="flex gap-2">
           <select
             value={selectedCategory}
-            onChange={(e) => { setSelectedCategory(String(e.target.value)); setPage(1); }}
+            onChange={(e) => { setSelectedCategory(e.target.value); setPage(1); }}
             className="border p-2 rounded"
           >
             <option value="">All categories</option>
             {categories.map((cat) => (
-              <option key={cat.id} value={String(cat.id.trim())}>
+              <option key={cat.id} value={cat.id}>
                 {cat.name}
               </option>
             ))}
@@ -148,8 +133,8 @@ useEffect(() => {
               <tr>
                 <td colSpan={5} className="p-4 text-center">Loading...</td>
               </tr>
-            ) : articles.length > 0 ? (
-              articles.map((article) => (
+            ) : displayedArticles.length > 0 ? (
+              displayedArticles.map((article) => (
                 <tr key={article.id} className="hover:bg-gray-50 text-gray-500 h-[84px]">
                   <td className="p-2 text-center">
                     {article.imageUrl && (
@@ -181,14 +166,13 @@ useEffect(() => {
         </table>
       </div>
 
-      {/* Pagination */}
+
       <div className="flex justify-center items-center gap-4 mt-4 mb-4 p-4">
         <button onClick={() => setPage((prev) => Math.max(prev - 1, 1))} disabled={page === 1} className="px-3 py-1 border rounded disabled:opacity-50">Previous</button>
         <span>{page} / {totalPages}</span>
         <button onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))} disabled={page === totalPages || totalPages === 0} className="px-3 py-1 border rounded disabled:opacity-50">Next</button>
       </div>
 
-      {/* Delete Modal */}
       {deleteModal.open && (
         <div className="fixed inset-0 bg-black/30 flex justify-center items-center">
           <div className="bg-white rounded-lg p-6 w-[400px]">

@@ -8,9 +8,10 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useRef, useEffect, useState } from "react";
 import axios from "axios";
+import Cookies from "js-cookie";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [username, setUserName] = useState("");
+  const [username, setUsername] = useState("");
   const pathname = usePathname();
   const initial = username ? username.charAt(0).toUpperCase() : "?";
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -22,21 +23,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   else if (pathname.includes("/admin/category")) pageTitle = "Category";
 
   useEffect(() => {
-    const fetchArticles = async () => {
-      try {
-        const res = await axios.get("https://test-fe.mysellerpintar.com/api/articles");
-        const data = res.data;
-        if (data.data && data.data.length > 0) {
-          setUserName(data.data[0].user.username);
+
+    const fetchProfile = async () => {
+        try {
+          const token = Cookies.get("token");
+          const res = await axios.get(
+            "https://test-fe.mysellerpintar.com/api/auth/profile",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          const data = res.data;
+          setUsername(data.username);
+          
+        } catch (err) {
+          console.error("Failed to fetch profile:", err);
         }
-      } catch (err) {
-        console.error("Failed to fetch articles:", err);
-      }
-    };
-    fetchArticles();
+      };
+      fetchProfile();
   }, []);
 
-  // click outside user menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {

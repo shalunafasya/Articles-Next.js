@@ -9,16 +9,20 @@ import Link from "next/link";
 import { useRef } from "react";
 import parse from "html-react-parser";
 import { useParams } from "next/navigation";
+import Cookies from "js-cookie";
 
 
 export default function ArticleDetail() {
   const [article, setArticle] = useState<Article | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [recommended, setRecommended] = useState<Article[]>([]);
-  const [username, setUserName] = useState("");
+  const [username, setUsername] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const params = useParams(); 
+  const initial = username ? username.charAt(0).toUpperCase() : "?";
+
+
 
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -27,6 +31,24 @@ export default function ArticleDetail() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const fetchProfile = async () => {
+        try {
+          const token = Cookies.get("token");
+          const res = await axios.get(
+            "https://test-fe.mysellerpintar.com/api/auth/profile",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          const data = res.data;
+          setUsername(data.username);
+        } catch (err) {
+          console.error("Failed to fetch profile:", err);
+        }
+      };
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -41,6 +63,7 @@ export default function ArticleDetail() {
       }
     };
     fetchArticle();
+    fetchProfile();
   }, [params?.id]);
 
   useEffect(() => {
@@ -59,11 +82,6 @@ export default function ArticleDetail() {
           .slice(0, 3);
         setRecommended(sameCategory);
 
-        const data = res.data;
-
-        if (data.data && data.data.length > 0) {
-          setUserName(data.data[0].user.username);
-        }
       } catch (err) {
         console.error(err);
       }
@@ -85,7 +103,6 @@ export default function ArticleDetail() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const initial = username ? username.charAt(0).toUpperCase() : "?";
   if (!article) return null;
 
   const handleLogout = () => {
@@ -118,7 +135,7 @@ export default function ArticleDetail() {
             onClick={() => setShowUserMenu((prev) => !prev)}
             className="flex items-center gap-2 cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-full bg-blue-200 flex items-center justify-center text-blue-500 font-bold">
+            <div className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center text-blue-500 font-bold">
               {initial}
             </div>
             <span className="text-black">{username}</span>
@@ -168,7 +185,7 @@ export default function ArticleDetail() {
       )}
 
       <section className="container mx-auto flex flex-col max-w-[1120px] py-30 justify-center">
-        <div className="py-10">
+        <div className="py-8 px-2">
           <p className="text-center text-sm text-gray-500 mb-6">
             {new Date(article.createdAt).toLocaleDateString("en-US", {
               month: "long",
@@ -192,10 +209,10 @@ export default function ArticleDetail() {
             />
           )}
 
-          <div className="prose max-w-none">{parse(article.content)}</div>
+          <div className="prose max-w-none text-sm sm:text-base">{parse(article.content)}</div>
         </div>
 
-        <div>
+        <div className="p-3">
           <h1 className="font-bold mb-4">Other Articles</h1>
 
           {recommended.length === 0 ? (

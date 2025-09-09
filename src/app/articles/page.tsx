@@ -14,12 +14,13 @@ export default function Articles() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [total, setTotal] = useState(0);
   const [limit, setLimit] = useState(0);
-  const [username, setUserName] = useState(Cookies.get("username") || "User");
+  const [username, setUsername] = useState(Cookies.get("username") || "User");
   const [searchTerm, setSearchTerm] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const initial = username ? username.charAt(0).toUpperCase() : "?";
   
 
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -32,6 +33,25 @@ export default function Articles() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const fetchProfile = async () => {
+        try {
+          const token = Cookies.get("token");
+          const res = await axios.get(
+            "https://test-fe.mysellerpintar.com/api/auth/profile",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          const data = res.data;
+          setUsername(data.username);
+          
+        } catch (err) {
+          console.error("Failed to fetch profile:", err);
+        }
+      };
 
   useEffect(() => {
     const fetchArticles = async () => {
@@ -47,7 +67,7 @@ export default function Articles() {
         setLimit(data.limit || 0);
 
         if (data.data && data.data.length > 0) {
-          setUserName(data.data[0].user.username);
+          setUsername(data.data[0].user.username);
         }
 
         const uniqueCategories = Array.from(
@@ -62,25 +82,8 @@ export default function Articles() {
         console.error("Failed to fetch articles:", err);
       }
     };
-
+    fetchProfile();
     fetchArticles();
-
-    const fetchUsername = async () => {
-      try {
-        const res = await axios.get(
-          "https://test-fe.mysellerpintar.com/api/articles"
-        );
-        const data = res.data;
-        if (data.data && data.data.length > 0) {
-          setUserName(data.data[0].user.username);
-        }
-      } catch (err) {
-        console.error("Failed to fetch username:", err);
-      }
-    };
-
-    fetchUsername();
-    
   }, []);
 
   useEffect(() => {
@@ -108,8 +111,6 @@ export default function Articles() {
   const displayedArticles = filteredArticles.slice(startIndex, endIndex);
 
   const totalPages = Math.ceil(filteredArticles.length / articlesPerPage);
-
-  const initial = username ? username.charAt(0).toUpperCase() : "?";
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -250,11 +251,11 @@ export default function Articles() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 p-2">
               {displayedArticles.length > 0 ? (
                 displayedArticles.map((article) => (
                   <Link key={article.id} href={`/articles/${article.id}`}>
-                    <div className="rounded-lg bg-white hover:shadow-lg transition overflow-hidden">
+                    <div className="bg-white hover:shadow-lg transition overflow-hidden">
                       <div className="h-[180px] sm:h-[200px] lg:h-[240px]">
                         {article.imageUrl && (
                           <Image
@@ -266,7 +267,7 @@ export default function Articles() {
                           />
                         )}
                       </div>
-                      <div className="py-5">
+                      <div className="py-5 px-2">
                         <p className="text-sm text-gray-500">
                           {new Date(article.createdAt).toLocaleDateString(
                             "en-US",

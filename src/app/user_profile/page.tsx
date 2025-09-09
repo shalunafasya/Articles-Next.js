@@ -38,7 +38,7 @@ export default function UserProfile() {
   }, []);
 
   return (
-    <main className="flex min-h-screen flex-col items-center bg-white pt-[120px] pb-[100px]">
+    <main className="flex min-h-screen flex-col items-center bg-white pt-[120px] pb-[100px] px-5">
       <header className="fixed top-0 left-0 right-0 h-[96px] flex items-center justify-between px-[60px] bg-white shadow-md border-b border-gray-200 z-50">
         <Image src="/images/logocolor.png" alt="logo" width={134} height={64} />
         <div className="flex items-center gap-2">

@@ -12,7 +12,6 @@ import parse from "html-react-parser";
 import { FaTrash } from "react-icons/fa";
 import { LuImagePlus } from "react-icons/lu";
 
-// schema validasi
 const schema = z.object({
   title: z.string().min(1, "Title wajib diisi"),
   category: z.string().min(1, "Category wajib dipilih"),

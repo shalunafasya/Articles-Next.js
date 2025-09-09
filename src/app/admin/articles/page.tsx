@@ -32,7 +32,7 @@ export default function ArticlesPage() {
   const fetchArticles = async () => {
     try {
       setLoading(true);
-      const res = await apiClient.get("/articles"); // ambil semua artikel
+      const res = await apiClient.get("/articles"); 
       setArticles(res.data.data || []);
 
       setTotal(res.data.total || 0);
@@ -116,7 +116,6 @@ export default function ArticlesPage() {
         </Link>
       </div>
 
-      {/* Articles Table */}
       <div className="overflow-x-auto">
         <table className="w-full border border-gray-300 text-sm">
           <thead className="bg-gray-100 border-b">
